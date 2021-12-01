@@ -25,44 +25,44 @@
 <script type="text/javascript">
     function getDateTime() {
         var datetime = document.getElementById("datetime").value;
-        console.log(toTimestamp(datetime))
-
         const API_URL = 'https://api.wheretheiss.at/v1/satellites/25544/positions?timestamps='+ toTimestamp(datetime) + '&units=miles';
 
         getData(API_URL, datetime);
 
-        
-
     }
 
+    //Get the 10 minutes after
     var add_minutes =  function (dt, minutes) {
             return new Date(dt.getTime() + minutes*60000);
         }
 
+    //Get the 10 minutes earlier
     var minus_minutes =  function (dt, minutes) {
         return new Date(dt.getTime() - minutes*60000);
     }
 
+    //Fetch the data based on the given datetime
     async function getData(API_URL, datetime){
-        var response = await fetch(API_URL);
-        var data = await response.json();
+        var response;
+        var data;
 
         var newString = "";
-        // var counter = 60;
 
+        //Iterate six times until 1 hour ago to retrieve the staleless data for ISS location
         for(var i = 0, counter = 60; i < 6; i ++, counter = counter - 10) {
-            // counter = 60;
             var timestamp = toTimestamp(add_minutes(new Date(datetime), counter))
             api_url = 'https://api.wheretheiss.at/v1/satellites/25544/positions?timestamps='+ timestamp + '&units=miles';
             response = await fetch(api_url)
             data = await response.json();
             newString += minus_minutes(new Date(datetime), counter) + " Longtitude: " + data[0].longitude.toFixed(2) + " Latitude: " + data[0].latitude.toFixed(2) + "<br>";
-
         }
 
+        response = await fetch(API_URL);
+        data = await response.json();
+        //Get the current ISS location
         newString += "<b>" + new Date(datetime) + " Longtitude: " + data[0].longitude.toFixed(2) + " Latitude: " + data[0].latitude.toFixed(2) + "</b><br>";
         
-
+        //Iterate six times until 1 hour after to retrieve the ISS location while adding into newString variable for display
         for(var i = 0, counter = 10; i < 6; i ++, counter = counter + 10) {
             var timestamp = toTimestamp(minus_minutes(new Date(datetime), counter))
             api_url = 'https://api.wheretheiss.at/v1/satellites/25544/positions?timestamps='+ timestamp + '&units=miles';
@@ -71,11 +71,11 @@
             newString += add_minutes(new Date(datetime), counter) + " Longtitude: " + data[0].longitude.toFixed(2) + " Latitude: " + data[0].latitude.toFixed(2) + "<br>";
 
         }
-        
+        //Assign to html tag for display the output
         document.getElementById("value").innerHTML= newString; 
     }
 
-
+    //Convert the date to unix second for api retrieval
     function toTimestamp(strDate){
         var datum = Date.parse(strDate);
         return datum/1000;
